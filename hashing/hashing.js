@@ -51,7 +51,7 @@ function createBlock(text) {
   block.prevHash = Blockchain.blocks[prevBlock].hash
   block.data = text;
   block.timestamp = Date.now();
-  block.hash = blockHash([block.index, block.prevHash, block.data, block.timestamp]);
+  block.hash = blockHash(block);
   return block;
 }
 
@@ -75,10 +75,10 @@ function verifyBlock(block, index, blockchain) {
     conditions.push(block.prevHash != "");
 
     // index is int >= 0
-    conditions.push(block.index >= 0);
+    conditions.push(block.index >= 0 && typeof block.index === "number");
 
     // hash matches block.hash
-    conditions.push(block.hash == blockHash([block.index, block.prevHash, block.data, block.timestamp]));
+    conditions.push(block.hash == blockHash(block));
 
     // prevHash of curr block == hash of prev block
     conditions.push(block.prevHash == blockchain[index - 1].hash);
@@ -98,9 +98,10 @@ console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
 // **********************************
 
 function blockHash(bl) {
+  const clone = {...bl}
+  delete clone.hash;
 	const hash = crypto.createHash("sha256")
-    .update(bl.toString())
+    .update(JSON.stringify(clone))
     .digest("hex");
-  // console.log(hash);
   return hash;
 }
