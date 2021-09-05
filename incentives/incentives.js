@@ -47,14 +47,51 @@ countMyEarnings();
 
 function addPoem() {
 	// TODO: add lines of poem as transactions to the transaction-pool
+  for (let line of poem) {
+    transactionPool.push(createTransaction(line));
+  }
 }
 
 function processPool() {
 	// TODO: process the transaction-pool in order of highest fees
+  transactionPool.sort((txA, txB) => {
+    return txB.fee - txA.fee;
+  });
+  
+  // console.log(`txPoolSort`, transactionPool)
+  
+  let i = 0;
+
+  while(i < transactionPool.length) {
+    let data = [];
+    data.push({blockFee: blockFee, account: PUB_KEY_TEXT });
+    while (data.length <= maxBlockSize && i < transactionPool.length) {
+      data.push(transactionPool[i]);
+      i++;
+    }
+    Blockchain.blocks.push(createBlock(data));
+  }  
 }
 
 function countMyEarnings() {
 	// TODO: count up block-fees and transaction-fees
+
+  // console.dir(Blockchain)
+  let earnings = 0;
+  Blockchain.blocks.forEach((block, index) => {
+    // console.log(block)
+    if (index !== 0) {
+      // console.log(`blockfee`, block.data[0].blockFee)
+      earnings += block.data[0].blockFee;
+      for (const [i, tx] of block.data.entries())  {
+        if (i !== 0) {
+          earnings += tx.fee;
+        }
+      }
+    }
+  });
+
+  console.log(`my total earnings: ${earnings}`);
 }
 
 function createBlock(data) {
@@ -96,6 +133,7 @@ function createTransaction(data) {
 	};
 
 	tr.hash = transactionHash(tr);
+  tr.fee = Math.floor((Math.random() * 10) + 1);
 
 	return tr;
 }
